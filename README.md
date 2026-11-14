@@ -123,7 +123,12 @@ rather than modifying the process-wide CSV limit.
 
 For N rows, S splits, and E emitted examples, sorting plus the sweep costs
 `O(N log N + N S log S + E)` worst case. The S term matters when increasing
-`max_splits`. Sorting active split labels is included in that bound. Memory is
+`max_splits`. Sorting active split labels is included in that bound. Expired splits are removed
+from that index as soon as their live count reaches zero, then reinserted if
+they return. Each row scans only currently live split labels rather than every
+split previously seen for the entity. This can save work on sparse histories
+with many split labels, but does not improve the dense worst-case bound.
+Deleting and reinserting labels adds work, so it is not a universal speedup. Memory is
 `O(input bytes + N + S² + E)`, including the per-split-pair report. Counts are
 Python integers. Split multiplicities and an end heap avoid materializing all
 crossing pairs. Per-record active start/end witness maps are omitted when
