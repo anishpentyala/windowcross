@@ -134,6 +134,9 @@ def audit(path, *, examples=0, limits=None):
             while ends and ends[0][0] <= start:
                 _, old_key, old_split = heapq.heappop(ends)
                 active[old_split] -= 1
+                if not active[old_split]:
+                    # Only currently live splits need to be sorted and scanned.
+                    del active[old_split]
                 if witnesses is not None:
                     del witnesses[old_split][old_key]
                 unmarked[old_split].pop(old_key, None)

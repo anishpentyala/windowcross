@@ -87,3 +87,49 @@ Developer checks on November 14, 2026:
 
 This section is local developer evidence, not new independent review, hosted
 current-head CI, downstream use or a cross-platform guarantee.
+
+## 0.1.2 active split index
+
+2026-11-14 local Linux validation, not hosted CI or Windows/macOS evidence.
+The previous 29-method test file is byte-unchanged. Four new methods give
+33 passing on actual CPython 3.9.25, 3.10.12, 3.11.17, 3.13.17, 3.14.9 and
+3.15.1. New tests inspect the actual active Counter keys passed to sorting,
+including full expiry, partial expiry with a split still live, split reappearance,
+equal start/end multiplicity and exact witness order. They exclude the separate
+final split-total sort from that observation.
+
+The same four methods against the original 0.1.1 core produce three assertion
+failures and zero test errors; the dense multiplicity control passes. They show
+expired zero-count labels still being scanned, not incorrect old report counts.
+A separate seeded reference run compares 3,200 complete old/new reports from
+800 random manifests at caps 0/1/3/1000, with zero differences. The existing suite
+also checks reports against its literal pair-enumerating reference.
+
+The intact suite passes all 33 methods. A deliberately wrong expected assertion
+causes one assertion failure. Five production mutations fail by assertions with
+zero test errors: leaving zero-count labels (3), changing half-open expiry (531),
+dropping pair multiplicity (1,286), replacing rather than incrementing active
+counts (1,329), and dropping prior affected counts (1,488). Counts include failing
+subtests. Restoring the code and expected assertion restores all 33 methods.
+
+Independent review separately ran Python 3.10 all 33 methods, the original
+29-method baseline, the three new-test baseline failures plus dense control,
+6,000 full-report equalities (1,200 manifests at five caps), 300 manifests at
+three row shuffles, mutation checks, a neutral installed-wheel 33-method run,
+lint and build. These checks are scoped evidence, not an exhaustive proof.
+
+Ruff 0.17.5 checks and format checks cover `src`, `tests` and `proof` (six files).
+No claim that all README fenced snippets were independently linted. Wheel and
+sdist build, all packaged source bytes match the candidate, and neutral installed
+wheel tests pass all 33 methods on Python 3.9 and 3.14.
+
+A local CPython 3.14.9 fresh-process median of three runs on 50,000 rows measured
+100-split disjoint histories at 0.436586 -> 0.244393 seconds without examples,
+and 0.441355 -> 0.244937 with one example. Dense 100-split histories were slightly
+slower (2.124706 -> 2.141069 seconds without examples), as were two-split disjoint
+histories (0.230618 -> 0.236219). Peak RSS was essentially unchanged. Independent
+fresh-process probes also found sparse-history savings, dense timing near neutral,
+and about 3% slower two-split churn. These are local synthetic measurements, not
+a portable speed or memory guarantee. Delete/reinsert work can cost more than
+scanning a short split list. The dense worst-case bound and retained input, heap,
+pending affected-record and optional witness data do not change.
