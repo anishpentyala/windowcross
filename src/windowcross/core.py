@@ -125,48 +125,58 @@ def audit(path, *, examples=0, limits=None):
     for entity, records in groupby(rows, key=lambda row: row[0]):
         entities += 1
         ends = []
-        active = defaultdict(dict)
+        active = Counter()
+        witnesses = defaultdict(dict) if examples else None
         unmarked = defaultdict(dict)
         entity_bad = False
         for _, start, end, key, split in records:
             # Endpoints touching at start do not share a half-open instant.
             while ends and ends[0][0] <= start:
                 _, old_key, old_split = heapq.heappop(ends)
-                del active[old_split][old_key]
+                active[old_split] -= 1
+                if witnesses is not None:
+                    del witnesses[old_split][old_key]
                 unmarked[old_split].pop(old_key, None)
             current_bad = False
             for other in sorted(active):
                 if other == split or not active[other]:
                     continue
                 pair = tuple(sorted((split, other)))
-                pairs[pair] += len(active[other])
+                pairs[pair] += active[other]
                 current_bad = entity_bad = True
                 # Every pending prior record is newly affected at most once,
                 # regardless of how many crossing pairs it participates in.
                 affected[other] += len(unmarked[other])
                 unmarked[other].clear()
-                for old_key, (old_start, old_end) in islice(
-                    active[other].items(), examples - len(samples)
-                ):
-                    samples.append(
-                        {
-                            "entity": entity,
-                            "earlier_id": old_key,
-                            "earlier_split": other,
-                            "earlier_start_us": old_start,
-                            "earlier_end_us": old_end,
-                            "later_id": key,
-                            "later_split": split,
-                            "later_start_us": start,
-                            "later_end_us": end,
-                            "overlap_us": min(end, old_end) - start,
-                        }
-                    )
+                if witnesses is not None:
+                    for old_key, (old_start, old_end) in islice(
+                        witnesses[other].items(), examples - len(samples)
+                    ):
+                        samples.append(
+                            {
+                                "entity": entity,
+                                "earlier_id": old_key,
+                                "earlier_split": other,
+                                "earlier_start_us": old_start,
+                                "earlier_end_us": old_end,
+                                "later_id": key,
+                                "later_split": split,
+                                "later_start_us": start,
+                                "later_end_us": end,
+                                "overlap_us": min(end, old_end) - start,
+                            }
+                        )
+                    if len(samples) == examples:
+                        # Counts need split multiplicities, not record metadata.
+                        # Once the evidence cap is full, stop retaining witnesses.
+                        witnesses = None
             if current_bad:
                 affected[split] += 1
             else:
                 unmarked[split][key] = None
-            active[split][key] = (start, end)
+            active[split] += 1
+            if witnesses is not None:
+                witnesses[split][key] = (start, end)
             heapq.heappush(ends, (end, key, split))
         affected_entities += entity_bad
     count = sum(pairs.values())
