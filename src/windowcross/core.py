@@ -64,70 +64,6 @@ def instant(text):
         raise AuditError("invalid or out-of-range timestamp") from exc
     return (delta.days * 86400 + delta.seconds) * 1000000 + delta.microseconds
 
-import csv
-import hashlib
-import heapq
-import io
-import re
-from collections import Counter, defaultdict
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from itertools import groupby, islice
-from pathlib import Path
-
-
-class AuditError(ValueError):
-    """The manifest cannot be completely audited under the declared contract."""
-
-
-def _integer(name, value, minimum):
-    if type(value) is not int or value < minimum:
-        raise AuditError(f"{name} must be an integer >= {minimum}")
-
-
-@dataclass(frozen=True)
-class Limits:
-    """Acceptance limits, not hard process memory or time bounds."""
-
-    max_bytes: int = 16777216
-    max_records: int = 100000
-    max_field_chars: int = 1024
-    max_splits: int = 100
-
-    def __post_init__(self):
-        for name, value in vars(self).items():
-            _integer(name, value, 1)
-
-
-_TIME = re.compile(
-    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})\Z",
-    re.ASCII,
-)
-_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
-
-
-def instant(text):
-    """Parse the fixed timestamp grammar into integer UTC microseconds."""
-    if not isinstance(text, str) or not _TIME.fullmatch(text):
-        raise AuditError("timestamp needs ISO date, seconds and explicit offset")
-    if int(text[11:13]) > 23 or int(text[14:16]) > 59 or int(text[17:19]) > 59:
-        raise AuditError("invalid timestamp clock fields")
-    if text[-1] != "Z" and (int(text[-5:-3]) > 23 or int(text[-2:]) > 59):
-        raise AuditError("invalid timestamp offset")
-    # Python 3.9/3.10 accept only 3 or 6 fractional digits. Normalize the
-    # already validated grammar to six without float conversion or rounding.
-    normalized = text[:-1] + "+00:00" if text[-1] == "Z" else text
-    if normalized[19] == ".":
-        clock, offset = normalized[:-6], normalized[-6:]
-        whole, fraction = clock.split(".")
-        normalized = whole + "." + fraction.ljust(6, "0") + offset
-    try:
-        dt = datetime.fromisoformat(normalized)
-        delta = dt.astimezone(timezone.utc) - _EPOCH
-    except (ValueError, OverflowError) as exc:
-        raise AuditError("invalid or out-of-range timestamp") from exc
-    return (delta.days * 86400 + delta.seconds) * 1000000 + delta.microseconds
-
 
 def _load(path, limits):
     try:
@@ -270,4 +206,4 @@ def audit(path, *, examples=0, limits=None):
         "examples_omitted": count - len(samples),
         "settings": {"examples": examples, "limits": dict(vars(limits))},
         "input": receipt,
-}
+                            }
