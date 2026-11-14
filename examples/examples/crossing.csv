@@ -1,0 +1,4 @@
+id,entity,split,start_at,end_at
+p1,account-7,train,2026-01-01T00:00:00Z,2026-01-03T00:00:00Z
+p2,account-7,test,2026-01-02T00:00:00Z,2026-01-04T00:00:00Z
+p3,account-7,test,2026-01-04T00:00:00Z,2026-01-05T00:00:00Z
