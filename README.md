@@ -125,8 +125,12 @@ For N rows, S splits, and E emitted examples, sorting plus the sweep costs
 `O(N log N + N S log S + E)` worst case. The S term matters when increasing
 `max_splits`. Sorting active split labels is included in that bound. Memory is
 `O(input bytes + N + S² + E)`, including the per-split-pair report. Counts are
-Python integers. Active record maps and an end heap avoid materializing all
-crossing pairs. Every newly affected prior record is cleared from a pending map
+Python integers. Split multiplicities and an end heap avoid materializing all
+crossing pairs. Per-record active start/end witness maps are omitted when
+`examples=0`, and dropped once the evidence cap is filled. Unfilled evidence
+requests retain those maps. The end heap, parsed rows and pending affected-record
+IDs still take memory; this is not a hard RAM guarantee or a claim of lower
+whole-process peak memory. Every newly affected prior record is cleared from a pending map
 at most once; dense overlap still produces exact affected counts. This does not
 make large inputs or large split counts cheap.
 
