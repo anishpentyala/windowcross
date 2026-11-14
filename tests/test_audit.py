@@ -378,6 +378,46 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(instant("1970-01-01T00:00:00Z"), 0)
         self.assertEqual(instant("1970-01-01T00:00:00-01:00"), 3600000000)
 
+    def witness_writes(self, examples):
+        from collections import defaultdict
+
+        writes = []
+
+        class Spy(dict):
+            def __setitem__(self, key, value):
+                if isinstance(value, tuple):
+                    writes.append((key, value))
+                super().__setitem__(key, value)
+
+        def tracked(factory):
+            self.assertIs(factory, dict)
+            return defaultdict(Spy)
+
+        with patch("windowcross.core.defaultdict", side_effect=tracked):
+            report = self.run_audit(examples=examples)
+        return report, writes
+
+    def test_counts_only_retains_no_active_record_metadata(self):
+        self.rows = [(str(i), "e", "x" if i % 2 else "y", 0, 10) for i in range(100)]
+        report, writes = self.witness_writes(0)
+        self.assertEqual(writes, [])
+        self.assertEqual(report["counts"]["cross_split_pairs"], 2500)
+
+    def test_full_example_cap_stops_retaining_active_metadata(self):
+        self.rows = [
+            (str(i).zfill(3), "e", "x" if i % 2 else "y", 0, 10) for i in range(100)
+        ]
+        report, writes = self.witness_writes(1)
+        self.assertEqual(len(writes), 1)
+        self.assertEqual(len(report["examples"]), 1)
+        self.assertEqual(report["counts"]["cross_split_pairs"], 2500)
+
+    def test_unfilled_cap_retains_metadata_until_no_longer_needed(self):
+        self.rows = [(str(i), "e", "x", i, i + 2) for i in range(10)]
+        report, writes = self.witness_writes(3)
+        self.assertEqual(len(writes), 10)
+        self.assertTrue(report["passed"])
+
     def test_csv_field_parser_limit(self):
         self.write()
         before = csv.field_size_limit()
