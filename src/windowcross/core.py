@@ -193,4 +193,4 @@ def audit(path, *, examples=0, limits=None):
         "examples_omitted": count - len(samples),
         "settings": {"examples": examples, "limits": dict(vars(limits))},
         "input": receipt,
-              }
+    }
