@@ -14,13 +14,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MUTANTS = [
+    (
+        "counts-only-witness-storage",
+        "defaultdict(dict) if examples else None",
+        "defaultdict(dict)",
+    ),
+    ("keep-witnesses-after-cap", "if len(samples) == examples:", "if False:"),
+    ("keep-expired-active-count", "active[old_split] -= 1", "active[old_split] -= 0"),
     ("closed-boundary", "ends[0][0] <= start", "ends[0][0] < start"),
     (
         "same-split-counted",
         "if other == split or not active[other]:",
         "if not active[other]:",
     ),
-    ("drop-pair-multiplicity", "pairs[pair] += len(active[other])", "pairs[pair] += 1"),
+    ("drop-pair-multiplicity", "pairs[pair] += active[other]", "pairs[pair] += 1"),
     (
         "no-pending-affected",
         "affected[other] += len(unmarked[other])",
