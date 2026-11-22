@@ -31,7 +31,13 @@ Exit statuses: `0` means no crossing under this policy, `1` means at least one
 crossing, and `2` means invalid input/options or an incomplete audit. Invalid
 input does not emit partial report JSON. Do not treat missing output, an error,
 or an unrecognized status as a pass. Output delivery can itself fail, so consumers
-must also successfully parse a complete report.
+must also successfully parse a complete report. The CLI checks complete writes and
+flushes before reporting an audit status. Failed report, help or diagnostic
+delivery exits 2, including closed streams and full output devices. Some bytes
+may already have reached the destination before a later delivery error; a
+partial report is never a usable audit. Embedded callers can use `main(argv)`;
+the `cli(argv)` process wrapper also handles final flushes and may disable a
+failed standard stream to avoid another flush during interpreter shutdown.
 
 ## Input and exact scope
 
