@@ -11,7 +11,7 @@ requires-python = ">=3.9"
 license = "MIT"
 
 [project.scripts]
-windowcross = "windowcross.__main__:main"
+windowcross = "windowcross.__main__:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
