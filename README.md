@@ -1,6 +1,29 @@
 # windowcross
 
+[![Tests](https://github.com/anishpentyala/windowcross/actions/workflows/tests.yml/badge.svg)](https://github.com/anishpentyala/windowcross/actions)
+
 Audit whether explicitly assigned time windows overlap across dataset partitions.
+
+## Quickstart
+
+```sh
+python -m pip install "git+https://github.com/anishpentyala/windowcross.git"
+cat > windows.csv <<'CSV'
+id,entity,split,start_at,end_at
+a,x,train,2026-01-01T00:00:00Z,2026-01-03T00:00:00Z
+b,x,test,2026-01-02T00:00:00Z,2026-01-04T00:00:00Z
+c,x,test,2026-01-04T00:00:00Z,2026-01-05T00:00:00Z
+CSV
+windowcross windows.csv --examples 1
+```
+
+This exits 1: one cross-split pair overlaps, affecting two records. The intervals
+for `b` and `c` only touch and do not overlap. Comparisons require the same exact
+entity and different splits. This audits declared windows, not every kind of
+training leakage or statistical independence.
+
+A PyPI release is being prepared. Until its package page is linked here, use the
+source-install command above.
 
 A label might depend on an outcome observed after its prediction time. Two rows
 assigned to different splits can therefore use overlapping outcome windows even
