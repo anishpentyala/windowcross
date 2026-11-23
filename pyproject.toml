@@ -6,9 +6,16 @@ build-backend = "setuptools.build_meta"
 name = "windowcross"
 version = "0.1.2"
 description = "Offline exact cross-partition time-window overlap audit"
+authors = [{name = "Anish Pentyala"}]
+keywords = ["time-series", "data-leakage", "csv", "data-validation"]
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
+
+[project.urls]
+Homepage = "https://github.com/anishpentyala/windowcross"
+Repository = "https://github.com/anishpentyala/windowcross"
+Issues = "https://github.com/anishpentyala/windowcross/issues"
 
 [project.scripts]
 windowcross = "windowcross.__main__:cli"
