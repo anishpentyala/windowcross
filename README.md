@@ -7,7 +7,7 @@ Audit whether explicitly assigned time windows overlap across dataset partitions
 ## Quickstart
 
 ```sh
-python -m pip install "git+https://github.com/anishpentyala/windowcross.git"
+python -m pip install windowcross==0.1.2
 cat > windows.csv <<'CSV'
 id,entity,split,start_at,end_at
 a,x,train,2026-01-01T00:00:00Z,2026-01-03T00:00:00Z
@@ -22,8 +22,14 @@ for `b` and `c` only touch and do not overlap. Comparisons require the same exac
 entity and different splits. This audits declared windows, not every kind of
 training leakage or statistical independence.
 
-A PyPI release is being prepared. Until its package page is linked here, use the
-source-install command above.
+Install the pinned 0.1.2 release from [PyPI](https://pypi.org/project/windowcross/0.1.2/):
+
+```sh
+python -m pip install windowcross==0.1.2
+```
+
+The package release is pinned separately from later repository development.
+Source-install commands in this README use the checked-out code, which may be newer.
 
 A label might depend on an outcome observed after its prediction time. Two rows
 assigned to different splits can therefore use overlapping outcome windows even
@@ -32,7 +38,7 @@ without creating or changing the split.
 
 It reads one local CSV, validates the entire input, and reports exact pair and
 affected-record counts. It uses Python's standard library and makes no network
-calls. This is source-only software, not a hosted service or registry release.
+calls. This is offline software, not a hosted service. The pinned PyPI release and the repository checkout are separate installation options.
 
 ## Run from source
 
